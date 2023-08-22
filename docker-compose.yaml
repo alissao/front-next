@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  front-next:
+    # build: . #production
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3000"
+    volumes:
+      - .:/home/node/front-next

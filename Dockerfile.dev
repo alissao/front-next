@@ -1,0 +1,10 @@
+FROM node:18-bullseye-slim
+
+ARG APP=front-next
+ARG HOME=/home/node
+
+WORKDIR $HOME/$APP
+
+USER node
+
+CMD [ "tail", "-f", "/dev/null" ]
