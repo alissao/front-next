@@ -42,7 +42,7 @@ export function NewRoutePage() {
 
     const directionsData: DirectionsResponseData & { request: any; } =
       await directionsResponse.json();
-    
+
     setDirectionsData(directionsData);
 
     map?.removeAllRoutes();
@@ -73,7 +73,7 @@ export function NewRoutePage() {
       body: JSON.stringify({
         name: `${startAddress} - ${endAddress}`,
         source_id: directionsData!.request.origin.place_id,
-        destination_id: directionsData!.request.origin.place_id,
+        destination_id: directionsData!.request.destination.place_id,
       })
     });
     const route = await response.json();
