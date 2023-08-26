@@ -2,31 +2,50 @@
 
 import { useEffect, useRef } from "react";
 import { useMap } from "../hooks/useMap";
-import useSwr from "swr";
-import { fetcher } from '../utils/http'
 import { Route } from "../utils/model";
 import { socket } from "../utils/socket-io";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export function NewRoutePage() {
+export function AdminPage() {
   const mapRef = useRef<HTMLDivElement>(null);
   const map = useMap(mapRef);
 
-  const { data: routes, error, isLoading } = useSwr<Route[]>(
-    'http://localhost:3000/routes',
-    fetcher,
-    {
-      fallback: [],
-    }
-  );
-
   useEffect(() => {
     socket.connect();
+
+    socket.on(
+      "admin-new-points",
+      async (data: { route_id: string; lat: number; lng: number }) => {
+        if (!map?.hasRoute(data.route_id)) {
+          const response = await fetch(`http://localhost:3000/routes/${data.route_id}`);
+          const route: Route = await response.json();
+          console.log(route);
+          map?.removeAllRoutes();
+          await map?.addRouteWithIcons({
+            routeId: data.route_id,
+            startMarkerOptions: {
+              position: route.directions.routes[0].legs[0].start_location
+            },
+            endMarkerOptions: {
+              position: route.directions.routes[0].legs[0].end_location
+            },
+            carMarkerOptions: {
+              position: route.directions.routes[0].legs[0].start_location
+            }
+          });
+        }
+        map?.moveCar(data.route_id, {
+          lat: data.lat,
+          lng: data.lng,
+        })
+      }
+    );
+
     return () => {
       socket.disconnect();
     }
-  }, []);
+  }, [map]);
 
   async function startRoute() {
     const routeId = (document.getElementById('route') as HTMLSelectElement).value;
@@ -53,49 +72,28 @@ export function NewRoutePage() {
     for (const step of steps) {
       await sleep(2000);
       map?.moveCar(routeId, step.start_location);
-      socket.emit('new-points', {
+      socket.emit('new-point', {
         route_id: routeId,
-        lat: step.start_location.lat,
-        lng: step.start_location.lng
+        lat: step.start_location,
+        lng: step.start_location
       })
 
       await sleep(2000);
       map?.moveCar(routeId, step.end_location);
-      socket.emit('new-points', {
+      socket.emit('new-point', {
         route_id: routeId,
-        lat: step.end_location.lat,
-        lng: step.end_location.lng
+        lat: step.end_location,
+        lng: step.end_location
       })
     }
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', height: '100%', width: '100%' }}>
-      <div>
-        <h1>Minha Viagem</h1>
-        <div
-          style={
-            {
-              display: "flex",
-              flexDirection: "column"
-            }
-          }
-        >
-          <select id="route">
-            {isLoading && <option>Carregando rotas...</option>}
-            {routes?.map((route) => (
-              <option key={route.id} value={route.id}>
-                {route.name}
-              </option>
-            ))}
-          </select>
-          <button type="submit" onClick={startRoute}>Iniciar Viagem</button>
-        </div>
-      </div>
+    <div style={{ height: '100%', width: '100%' }}>
       <div style={{ height: '100%', width: '100%' }} ref={mapRef} />
     </div>
   );
 }
 
 
-export default NewRoutePage;
+export default AdminPage;
