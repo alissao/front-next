@@ -25,7 +25,8 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"johnpapa.vscode-peacock"
+				"johnpapa.vscode-peacock",
+				"humao.rest-client"
 			]
 		}
 	}
