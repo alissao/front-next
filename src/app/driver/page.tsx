@@ -2,24 +2,17 @@
 
 import { useEffect, useRef } from "react";
 import { useMap } from "../hooks/useMap";
-import useSwr from "swr";
-import { fetcher } from '../utils/http'
 import { Route } from "../utils/model";
 import { socket } from "../utils/socket-io";
+import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
+import { Button, Typography } from "@mui/material";
+import { RouteSelect } from "../components/RouteSelect";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function NewRoutePage() {
   const mapRef = useRef<HTMLDivElement>(null);
   const map = useMap(mapRef);
-
-  const { data: routes, error, isLoading } = useSwr<Route[]>(
-    'http://localhost:3000/routes',
-    fetcher,
-    {
-      fallback: [],
-    }
-  );
 
   useEffect(() => {
     socket.connect();
@@ -70,9 +63,9 @@ export function NewRoutePage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', height: '100%', width: '100%' }}>
-      <div>
-        <h1>Minha Viagem</h1>
+    <Grid2 container sx={{ display: "flex", flex: 1 }}>
+      <Grid2 xs={4} px={2}>
+        <Typography variant="h4">Minha Viagem</Typography>
         <div
           style={
             {
@@ -81,19 +74,14 @@ export function NewRoutePage() {
             }
           }
         >
-          <select id="route">
-            {isLoading && <option>Carregando rotas...</option>}
-            {routes?.map((route) => (
-              <option key={route.id} value={route.id}>
-                {route.name}
-              </option>
-            ))}
-          </select>
-          <button type="submit" onClick={startRoute}>Iniciar Viagem</button>
+          <RouteSelect id="routes" />
+          <Button type="submit" onClick={startRoute} variant="contained">
+            Iniciar Viagem
+          </Button>
         </div>
-      </div>
-      <div style={{ height: '100%', width: '100%' }} ref={mapRef} />
-    </div>
+      </Grid2>
+      <Grid2 xs={8} ref={mapRef} />
+    </Grid2>
   );
 }
 
